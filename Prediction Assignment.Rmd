@@ -1,0 +1,68 @@
+---
+title: "Prediction Assignment"
+author: "Gehad Mohsen"
+date: "11/30/2019"
+output: html_document
+---
+
+# Loading data
+
+```{r}
+data_train <- read.csv("pml-training.csv")
+data_test  <- read.csv("pml-testing.csv")
+
+```
+
+# Loading required packages 
+
+```{r}
+library(dplyr)
+library(caret)
+library(randomForest)
+library(e1071)
+
+```
+
+
+# Data Preprocessing
+
+Cleaning all the variables with missing values and irrevelant variables
+
+```{r}
+gooddata<-names(data_test[,colMeans(is.na(data_test))==0])[8:59]
+
+training_data <- data_train[,c(gooddata,"classe")]
+testing_data <-data_test[,c(gooddata,"problem_id")]
+
+```
+
+# Cross validation
+
+Use 70% of training set data to built a model, and use the rest to test the model
+
+```{r}
+set.seed(100)
+inTrain <- createDataPartition(y=training_data$classe,p=.70,list=F)
+TrainingSet <- training_data[inTrain,]
+TestingSet <- training_data[-inTrain,]
+
+```
+
+# Building the Model 
+
+Use Random Forest method (RF)
+
+```{r}
+
+# Fitting model
+model1 <- randomForest(classe ~., data=TrainingSet, method="class")
+
+# Predicting
+prediction1 <- predict(model1, TestingSet, Type="class")
+
+# Testing
+confusionMatrix(prediction1, TestingSet$classe)
+
+```
+
+The accuracy of the model is 99.58 % which is a high accuracy , so I will use this model in prediction for the quiz.
